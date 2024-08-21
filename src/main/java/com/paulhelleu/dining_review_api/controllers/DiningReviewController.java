@@ -4,9 +4,11 @@ import com.paulhelleu.dining_review_api.models.AdminReviewAction;
 import com.paulhelleu.dining_review_api.models.DiningReview;
 import com.paulhelleu.dining_review_api.models.Restaurant;
 import com.paulhelleu.dining_review_api.models.User;
+import com.paulhelleu.dining_review_api.repositories.AdminReviewActionRepository;
 import com.paulhelleu.dining_review_api.repositories.DiningReviewRepository;
 import com.paulhelleu.dining_review_api.repositories.RestaurantRepository;
 import com.paulhelleu.dining_review_api.repositories.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,13 +22,16 @@ public class DiningReviewController {
   private final DiningReviewRepository diningReviewRepository;
   private final RestaurantRepository restaurantRepository;
   private final UserRepository userRepository;
+  private final AdminReviewActionRepository adminReviewActionRepository;
 
   public DiningReviewController(final DiningReviewRepository diningReviewRepository,
                                 final RestaurantRepository restaurantRepository,
-                                final UserRepository userRepository) {
+                                final UserRepository userRepository,
+                                final AdminReviewActionRepository adminReviewActionRepository) {
     this.diningReviewRepository = diningReviewRepository;
     this.restaurantRepository = restaurantRepository;
     this.userRepository = userRepository;
+    this.adminReviewActionRepository = adminReviewActionRepository;
   }
 
   @GetMapping
@@ -34,7 +39,7 @@ public class DiningReviewController {
     return this.diningReviewRepository.findByAdminStatusApproveDiningReviewTrue();
   }
 
-  @GetMapping("/diningReview/{id}")
+  @GetMapping("/review/{id}")
   public DiningReview getDiningReview(@PathVariable Long id) {
     Optional<DiningReview> diningReviewOptional = this.diningReviewRepository.findById(id);
 
@@ -94,8 +99,9 @@ public class DiningReviewController {
     return this.diningReviewRepository.findAll();
   }
 
-  @GetMapping("/admin/approve/{id}")
-  public AdminReviewAction approveReview(@PathVariable Long id, @RequestParam Boolean status) {
+  @Transactional
+  @PostMapping("/admin/approve/{id}")
+  public AdminReviewAction approveReview(@PathVariable Long id, @RequestBody Boolean status) {
     if (status == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status cannot be empty");
     }
@@ -110,7 +116,7 @@ public class DiningReviewController {
 
     adminReviewAction.setApproveDiningReview(status);
 
-    return adminReviewAction;
+    return this.adminReviewActionRepository.save(adminReviewAction);
   }
 
   @PostMapping("/restaurants")
