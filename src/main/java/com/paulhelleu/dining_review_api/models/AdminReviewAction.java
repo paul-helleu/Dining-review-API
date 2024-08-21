@@ -1,5 +1,6 @@
 package com.paulhelleu.dining_review_api.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,5 +17,6 @@ public class AdminReviewAction {
   @Setter private Boolean approveDiningReview;
 
   @OneToOne(mappedBy = "adminStatus", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonIgnore
   @Setter private DiningReview diningReview;
 }
