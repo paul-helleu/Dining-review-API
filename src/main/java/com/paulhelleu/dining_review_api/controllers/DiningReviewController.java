@@ -34,6 +34,7 @@ public class DiningReviewController {
     this.adminReviewActionRepository = adminReviewActionRepository;
   }
 
+  // DiningReview
   @GetMapping
   public Iterable<DiningReview> getAdminStatusApproveDiningReview() {
     return this.diningReviewRepository.findByAdminStatusApproveDiningReviewTrue();
@@ -47,6 +48,70 @@ public class DiningReviewController {
       return diningReviewOptional.get();
     }
     throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+  }
+
+  @PutMapping("/review/{id}")
+  public DiningReview updateDiningReview(@PathVariable Long id, @RequestBody DiningReview diningReviewUpdated) {
+    Optional<DiningReview> diningReviewOptional = this.diningReviewRepository.findById(id);
+    if (diningReviewOptional.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+
+    DiningReview diningReview = diningReviewOptional.get();
+
+    if (diningReviewUpdated.getCommentary() != null) {
+      diningReview.setCommentary(diningReviewUpdated.getCommentary());
+    }
+    if (diningReviewUpdated.getDairyScore() != null) {
+      diningReview.setDairyScore(diningReviewUpdated.getDairyScore());
+    }
+    if (diningReviewUpdated.getEggScore() != null) {
+      diningReview.setEggScore(diningReviewUpdated.getEggScore());
+    }
+    if (diningReviewUpdated.getPeanutScore() != null) {
+      diningReview.setPeanutScore(diningReviewUpdated.getPeanutScore());
+    }
+
+    return this.diningReviewRepository.save(diningReview);
+  }
+
+  @GetMapping("/admin/diningReview")
+  public Iterable<DiningReview> getDiningReviews() {
+    return this.diningReviewRepository.findAll();
+  }
+
+  @Transactional
+  @DeleteMapping("/review/{id}")
+  public DiningReview deleteDiningReview(@PathVariable Long id) {
+    Optional<DiningReview> diningReviewOptional = this.diningReviewRepository.findById(id);
+    if (diningReviewOptional.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+
+    DiningReview diningReview = diningReviewOptional.get();
+    this.diningReviewRepository.delete(diningReview);
+    return diningReview;
+  }
+
+  // AdminReviewAction
+  @Transactional
+  @PostMapping("/admin/approve/{id}")
+  public AdminReviewAction approveReview(@PathVariable Long id, @RequestBody Boolean status) {
+    if (status == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status cannot be empty");
+    }
+
+    Optional<DiningReview> diningReviewOptional = this.diningReviewRepository.findById(id);
+    if (diningReviewOptional.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dining review not found");
+    }
+
+    DiningReview diningReview = diningReviewOptional.get();
+    AdminReviewAction adminReviewAction = diningReview.getAdminStatus();
+
+    adminReviewAction.setApproveDiningReview(status);
+
+    return this.adminReviewActionRepository.save(adminReviewAction);
   }
 
   @GetMapping("/users/{name}")
@@ -92,31 +157,6 @@ public class DiningReviewController {
     }
 
     throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-  }
-
-  @GetMapping("/admin/diningReview")
-  public Iterable<DiningReview> getDiningReviews() {
-    return this.diningReviewRepository.findAll();
-  }
-
-  @Transactional
-  @PostMapping("/admin/approve/{id}")
-  public AdminReviewAction approveReview(@PathVariable Long id, @RequestBody Boolean status) {
-    if (status == null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status cannot be empty");
-    }
-
-    Optional<DiningReview> diningReviewOptional = this.diningReviewRepository.findById(id);
-    if (diningReviewOptional.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dining review not found");
-    }
-
-    DiningReview diningReview = diningReviewOptional.get();
-    AdminReviewAction adminReviewAction = diningReview.getAdminStatus();
-
-    adminReviewAction.setApproveDiningReview(status);
-
-    return this.adminReviewActionRepository.save(adminReviewAction);
   }
 
   @PostMapping("/restaurants")
@@ -194,5 +234,7 @@ public class DiningReviewController {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
+
+
 
 }
